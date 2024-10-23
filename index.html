@@ -6,22 +6,34 @@
   <title>Chat with AI</title>
   <style>
     body {
-      background-color: #121212;
+      background-color: #1c1c1c;
       color: #e0e0e0;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
+      overflow: hidden;
     }
     .chat-container {
       width: 100%;
-      max-width: 600px;
+      max-width: 800px;
+      height: 90vh;
       padding: 20px;
       border-radius: 8px;
-      background-color: #1e1e1e;
+      background-color: #2a2a2a;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #1e1e1e;
+      margin-bottom: 10px;
     }
     .input-area {
       display: flex;
@@ -43,26 +55,98 @@
       background-color: #4caf50;
       color: white;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
     button:hover {
       background-color: #45a049;
     }
-    .response {
-      margin-top: 15px;
-      white-space: pre-wrap;
+    .message {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .user-message {
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .ai-message {
+      background-color: #28a745;
+      color: white;
+      align-self: flex-start;
     }
   </style>
 </head>
 <body>
   <div class="chat-container">
     <h2>Chat with AI</h2>
+    <div class="messages" id="messagesContainer"></div>
     <div class="input-area">
       <input type="text" id="userInput" placeholder="Type your message here..." />
       <button onclick="sendMessage()">Send</button>
     </div>
-    <div class="response" id="responseOutput"></div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    const API_KEY = 'E0EqQOqcDrC0rK3BYlSC2aOU1sxwlrFo';
+    const MODEL_ENDPOINT = 'https://api.deepinfra.com/v1/openai/chat/completions';
+
+    // Store the chat history
+    const messages = [];
+
+    // Function to send the user's input to the AI
+    async function sendMessage() {
+      const userInput = document.getElementById('userInput').value;
+      const messagesContainer = document.getElementById('messagesContainer');
+
+      if (!userInput.trim()) {
+        return;
+      }
+
+      // Clear the input field and add the user message to the chat
+      document.getElementById('userInput').value = '';
+      addMessage('user', userInput);
+      messages.push({ role: 'user', content: userInput });
+
+      const input = {
+        model: "lizpreciatior/lzlv_70b_fp16_hf",
+        messages: messages
+      };
+
+      try {
+        const response = await fetch(MODEL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(input)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const generatedText = data.choices[0].message.content || 'No response received.';
+
+        // Add the AI response to the chat
+        addMessage('ai', generatedText);
+        messages.push({ role: 'assistant', content: generatedText });
+      } catch (error) {
+        addMessage('ai', `Error: ${error.message}`);
+      }
+    }
+
+    // Function to add a message to the chat
+    function addMessage(role, content) {
+      const messagesContainer = document.getElementById('messagesContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}-message`;
+      messageDiv.textContent = content;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+    }
+  </script>
 </body>
 </html>
