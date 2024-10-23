@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Generator</title>
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #e0e0e0;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      outline: none;
+      background-color: #333;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #imageContainer {
+      margin-top: 20px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .loading-message {
+      color: #ffcc00;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>AI Image Generator</h2>
+    <input type="text" id="promptInput" placeholder="Enter a prompt for the image..." />
+    <button onclick="generateImage()">Generate Image</button>
+    <div id="loadingMessage" class="loading-message" style="display: none;">Generating your image, please wait...</div>
+    <div id="imageContainer">
+      <img id="generatedImage" alt="Generated Image" />
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'E0EqQOqcDrC0rK3BYlSC2aOU1sxwlrFo';
+    const MODEL_ENDPOINT = 'https://api.deepinfra.com/v1/inference/stabilityai/sdxl-turbo';
+
+    async function generateImage() {
+      const prompt = document.getElementById('promptInput').value;
+      const loadingMessage = document.getElementById('loadingMessage');
+      const imageContainer = document.getElementById('imageContainer');
+      const generatedImage = document.getElementById('generatedImage');
+
+      if (!prompt.trim()) {
+        alert("Please enter a prompt.");
+        return;
+      }
+
+      // Show loading message
+      loadingMessage.style.display = 'block';
+      imageContainer.style.display = 'none';
+
+      const requestData = {
+        prompt: prompt
+      };
+
+      try {
+        const response = await fetch(MODEL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const imageData = data.images[0];
+
+        // Hide loading message and display the generated image
+        loadingMessage.style.display = 'none';
+        generatedImage.src = imageData;
+        imageContainer.style.display = 'flex';
+      } catch (error) {
+        loadingMessage.style.display = 'none';
+        alert(`Error: ${error.message}`);
+      }
+    }
+  </script>
+</body>
+</html>
