@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Generator</title>
+  <title>AI Image Generator</title>
   <style>
     body {
       background-color: #1c1c1c;
@@ -70,7 +70,6 @@
 <body>
   <div class="container">
     <h2>AI Image Generator</h2>
-    <a href="./ai.html" style="transform: translate(0px, -15px);" >AI Chatbot</a>
     <input type="text" id="promptInput" placeholder="Enter a prompt for the image..." />
     <button onclick="generateImage()">Generate Image</button>
     <div id="loadingMessage" class="loading-message" style="display: none;">Generating your image, please wait...</div>
@@ -117,6 +116,14 @@
         }
 
         const data = await response.json();
+
+        // Check if NSFW content is detected
+        if (data.nsfw_content_detected && data.nsfw_content_detected.includes(true)) {
+          alert("NSFW content detected. Reloading the page...");
+          location.reload(); // Reload the page if NSFW content is detected
+          return;
+        }
+
         const imageData = data.images[0];
 
         // Hide loading message and display the generated image
