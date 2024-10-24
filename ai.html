@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with AI</title>
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #e0e0e0;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #1e1e1e;
+      margin-bottom: 10px;
+    }
+    .input-area {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      outline: none;
+      background-color: #333;
+      color: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .user-message {
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .ai-message {
+      background-color: #28a745;
+      color: white;
+      align-self: flex-start;
+    }
+    .loading-message {
+      background-color: #ffcc00;
+      color: black;
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h2 id="title">Please enable JavaScript in your browser.</h2>
+    <a style="transform: translate(200px, -50px);" href="./imagegen.html">AI Text to Image Generator</a>
+    <div class="messages" id="messagesContainer"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your message here..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('title').textContent = "Chat with AI";
+    const API_KEY = 'E0EqQOqcDrC0rK3BYlSC2aOU1sxwlrFo';
+    const MODEL_ENDPOINT = 'https://api.deepinfra.com/v1/openai/chat/completions';
+
+    const messages = []; // Store chat history
+
+    // Function to send user input to the AI
+    async function sendMessage() {
+      const userInput = document.getElementById('userInput').value;
+      const messagesContainer = document.getElementById('messagesContainer');
+
+      if (!userInput.trim()) return; // Prevent empty input
+
+      document.getElementById('userInput').value = ''; // Clear input field
+      addMessage('user', userInput); // Display user message
+      messages.push({ role: 'user', content: userInput });
+
+      const loadingMessage = addLoadingMessage(); // Add loading message
+
+      const input = {
+        model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
+        messages: messages
+      };
+
+      try {
+        const response = await fetch(MODEL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(input)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const generatedText = data.choices[0].message.content || 'No response received.';
+
+        messagesContainer.removeChild(loadingMessage); // Remove loading message
+        addMessage('ai', generatedText); // Display AI message
+        messages.push({ role: 'assistant', content: generatedText });
+      } catch (error) {
+        messagesContainer.removeChild(loadingMessage); // Remove loading message
+        addMessage('ai', `Error: ${error.message}`); // Display error message
+      }
+    }
+
+    // Function to add a loading message
+    function addLoadingMessage() {
+      const messagesContainer = document.getElementById('messagesContainer');
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message loading-message';
+      loadingDiv.textContent = "The AI is generating a response. Please wait...";
+      messagesContainer.appendChild(loadingDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll to bottom
+      return loadingDiv;
+    }
+
+    // Function to display a message
+    function addMessage(role, content) {
+      const messagesContainer = document.getElementById('messagesContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}-message`;
+      messageDiv.textContent = content;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll to bottom
+    }
+  </script>
+</body>
+</html>
