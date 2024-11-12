@@ -170,6 +170,37 @@
       messageDiv.textContent = content;
       messagesContainer.appendChild(messageDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+      (function() {
+    let consoleOpen = false;
+  
+    // Check for changes in viewport width and height when dev tools open
+    function checkDevTools() {
+      if ((window.outerWidth - window.innerWidth) > 100 || (window.outerHeight - window.innerHeight) > 100) {
+        if (!consoleOpen) {
+          consoleOpen = true;
+          onDevToolsOpen();
+        }
+      } else {
+        consoleOpen = false;
+      }
+    }
+  
+    function onDevToolsOpen() {
+      document.body.innerHTML = "<h1>hey there buddy, no getting my api key sorry!!!</h1>";
+    }
+  
+    // Set interval to check for dev tools status
+    setInterval(checkDevTools, 500);
+  
+    (function() {
+      const isDevToolsOpened = /./;
+      isDevToolsOpened.toString = function() {
+        onDevToolsOpen();
+        return '';
+      };
+      console.log('%c', isDevToolsOpened);
+    })();
+  })();
     }
   </script>
 </body>
